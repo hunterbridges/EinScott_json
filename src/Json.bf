@@ -110,38 +110,77 @@ class JsonTree
 
 static class JsonPrinter
 {
-	public static void Value(JsonElement el, String buffer)
+	public static void Value(JsonElement el, String buffer, bool pretty = false, int depth = 0)
 	{
 		switch (el)
 		{
 		case .Object(let object):
 			buffer.Append('{');
+			if (pretty)
+				buffer.Append('\n');
+
 			if (object.Count > 0)
 			{
 				for (let pair in object)
 				{
+					for (int i = 0; pretty && i < depth + 1; i++)
+						buffer.Append('\t');
+
 					buffer.Append('"');
 					buffer.Append(pair.key);
-					buffer.Append("\":");
 
-					Value(pair.value, buffer);
+					if (pretty)
+						buffer.Append("\": ");
+					else
+						buffer.Append("\":");
+
+					Value(pair.value, buffer, pretty, depth + 1);
 
 					buffer.Append(',');
+					if (pretty)
+						buffer.Append('\n');
 				}
 				buffer.RemoveFromEnd(1);
+				if (pretty)
+					buffer.RemoveFromEnd(1);
 			}
+
+			if (pretty)
+				buffer.Append('\n');
+			
+			for (int i = 0; pretty && i < depth; i++)
+				buffer.Append('\t');
+
 			buffer.Append('}');
 		case .Array(let array):
 			buffer.Append('[');
+			if (pretty)
+				buffer.Append('\n');
+
 			if (array.Count > 0)
 			{
 				for (let value in array)
 				{
-					Value(value, buffer);
+					for (int i = 0; pretty && i < depth + 1; i++)
+						buffer.Append('\t');
+
+					Value(value, buffer, pretty, depth + 1);
 					buffer.Append(',');
+					
+					if (pretty)
+						buffer.Append('\n');
 				}
 				buffer.RemoveFromEnd(1);
+				if (pretty)
+					buffer.RemoveFromEnd(1);
 			}
+			
+			if (pretty)
+				buffer.Append('\n');
+
+			for (int i = 0; pretty && i < depth; i++)
+				buffer.Append('\t');
+
 			buffer.Append(']');
 		case .String(let string):
 			buffer.Append('"');
@@ -184,8 +223,8 @@ static class Json
 	}
 
 	[Inline]
-	public static void WriteJson(JsonTree tree, String jsonBuffer)
+	public static void WriteJson(JsonTree tree, String jsonBuffer, bool pretty = false)
 	{
-		JsonPrinter.Value(tree.root, jsonBuffer);
+		JsonPrinter.Value(tree.root, jsonBuffer, pretty);
 	}
 }
